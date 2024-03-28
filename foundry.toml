@@ -2,5 +2,8 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+# remappings = ["@chainlink/contracts/src/v0.8/shared/interfaces/ = ../lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/"]
 
+remappings = ["@chainlink/contracts/src/v0.8/shared/interfaces/ = /lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/"]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+# 'remappings' re-routes the path for the files to be imported by the Contracts
