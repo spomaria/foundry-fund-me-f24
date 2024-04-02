@@ -9,9 +9,10 @@ pragma solidity ^0.8.18;
 // This named import enables us use the functionalities of the 
 // PriceConverter library
 import { PriceConverter } from "./PriceConverter.sol";
+import { AggregatorV3Interface } from "../lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 // create custom errors for gas optimization
-error NotOwner();
+error FundMe_NotOwner();
 
 contract FundMe {
 
@@ -19,6 +20,7 @@ contract FundMe {
     // methods in the PriceConverter library
     using PriceConverter for uint256;
 
+    AggregatorV3Interface private s_priceFeed;
     // Since ETH is equivalent to 1e18, we give our minimumUSD 18 zeros as well
     // since this value is set once and outside a function declaration,
     // We set it as constant to optimize gas
@@ -32,14 +34,15 @@ contract FundMe {
     // We set it as immutable to optimize gas
     address public immutable i_owner;
 
-    constructor(){
+    constructor(address priceFeed){
         i_owner = msg.sender;
+        s_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     function _onlyOwner() internal view {
         // require(msg.sender == i_owner, "Must be owner!");
         if (msg.sender != i_owner){
-            revert NotOwner();
+            revert FundMe_NotOwner();
         }
     }
 
@@ -108,6 +111,10 @@ contract FundMe {
         // In this way, any user that tries to send less than the minimum amount allowed 
         // and did not call the fund function will equally have their transaction reverted
         fund();
+    }
+
+    function getVersion() public view returns (uint256){
+        return s_priceFeed.version();
     }
 
 }
