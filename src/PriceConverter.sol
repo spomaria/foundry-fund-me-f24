@@ -9,12 +9,12 @@ library PriceConverter {
     // All functions in a library should be internal
 
     // Create a function that gets the price of the token
-    function getPrice() internal view returns (uint256) {
+    function getPrice(AggregatorV3Interface priceFeed) internal view returns (uint256) {
         // Get the Address and ABI of the Contract the stores the price of ETH
         // on ChainLink website. From Sepolia TestNet we have
         // Address 0x694AA1769357215DE4FAC081bf1f309aDC325306 
         // ABI 
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        // AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
         // The 'latestRoundData' method returns five values. 
         // However, we are only interested in 'price'
         (, int256 price, , , ) = priceFeed.latestRoundData();
@@ -25,8 +25,8 @@ library PriceConverter {
     }
 
     // Create a function the converts the 'msg.value' base on the price
-    function getConversionRate(uint ethAmount) internal view returns (uint256) {
-        uint256 ethPrice = getPrice();
+    function getConversionRate(uint ethAmount, AggregatorV3Interface priceFeed) internal view returns (uint256) {
+        uint256 ethPrice = getPrice(priceFeed);
         uint256 ethAmountInUsd = (ethAmount * ethPrice)/ 1e18;
         return ethAmountInUsd;
 

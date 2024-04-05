@@ -58,7 +58,7 @@ contract FundMe {
         // set a minimum amount a user can send
         // 1. How do we send ETH to this contract?
         //  We make the function payable so that is can send ETH
-        require(msg.value.getConversionRate() > MINIMUM_USD, "didn't send enough ETH"); // 1e18 = 1ETH
+        require(msg.value.getConversionRate(s_priceFeed) > MINIMUM_USD, "didn't send enough ETH"); // 1e18 = 1ETH
         // require(msg.value > MINIMUM_USD, "didn't send enough ETH"); // 1e18 = 1ETH
         // Include this address in the list of funders
         s_funders.push(msg.sender);
