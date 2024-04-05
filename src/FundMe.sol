@@ -24,11 +24,13 @@ contract FundMe {
     // Since ETH is equivalent to 1e18, we give our minimumUSD 18 zeros as well
     // since this value is set once and outside a function declaration,
     // We set it as constant to optimize gas
-    uint256 public MINIMUM_USD = 1e17; //5e18
+    uint256 public MINIMUM_USD = 5; //5e18
 
     // A list of addresses to keep track of funders
-    address[] public funders;
-    mapping (address funders => uint256 amountFunded) public addressToAmountFunded;
+    // Make the contract gas efficient by changing the varibles from
+    // public to private
+    address[] private s_funders;
+    mapping (address funders => uint256 amountFunded) private s_addressToAmountFunded;
 
     // Since the value of i_owner variable is set once during deployment and does not change,
     // We set it as immutable to optimize gas
@@ -59,16 +61,16 @@ contract FundMe {
         require(msg.value.getConversionRate() > MINIMUM_USD, "didn't send enough ETH"); // 1e18 = 1ETH
         // require(msg.value > MINIMUM_USD, "didn't send enough ETH"); // 1e18 = 1ETH
         // Include this address in the list of funders
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+        s_addressToAmountFunded[msg.sender] += msg.value;
     }
 
     
     function withdraw() public onlyOwner {
         // Reset all contributions to zero using a for loop
-        for(uint256 indexFunder; indexFunder < funders.length;){
-            address funder = funders[indexFunder];
-            addressToAmountFunded[funder] = 0;
+        for(uint256 indexFunder; indexFunder < s_funders.length;){
+            address funder = s_funders[indexFunder];
+            s_addressToAmountFunded[funder] = 0;
             // We use unchecked for gas optimization since we know
             // that our variable cannot overflow
             unchecked{
@@ -77,7 +79,7 @@ contract FundMe {
         }
 
         // Reset the funders array
-        funders = new address[](0);
+        s_funders = new address[](0);
 
         // There are three ways to withdraw the funds to the caller of the function
         // 1. transfer
@@ -117,4 +119,17 @@ contract FundMe {
         return s_priceFeed.version();
     }
 
+    /**
+    * section for our View / Pure functions
+     */
+
+    function getAddressToAmountFunded(address fundinAddress) public view returns(
+        uint256
+    ){
+        return s_addressToAmountFunded[fundinAddress];
+    }
+
+    function getFunder(uint256 index) public view returns(address){
+        return s_funders[index];
+    }
 }

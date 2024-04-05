@@ -13,6 +13,10 @@ contract HelperConfig is Script{
     // If we are on local anvil, deploy mocks otherwise
     // grab the existing address from the live network
 
+    // lets take care of our magic constants
+    uint8 public constant DECIMALS = 8;
+    int256 public constant INITIAL_PRICE = 2000e8;
+
     // set the active network configuration
     NetworkConfig public activeNetworkConfig;
 
@@ -32,7 +36,7 @@ contract HelperConfig is Script{
         } else if(block.chainid == 1){
             activeNetworkConfig = getMainnetEthConfig();
         } else{
-            activeNetworkConfig = getAnvilEthConfig();
+            activeNetworkConfig = getOrCreateAnvilEthConfig();
         }
     }
 
@@ -58,14 +62,21 @@ contract HelperConfig is Script{
         return ethConfig;
     }
 
-    function getAnvilEthConfig() public returns(NetworkConfig memory){
+    function getOrCreateAnvilEthConfig() public returns(NetworkConfig memory){
         // returns anvil price feed address
+
+        // we will only set an address if we didn't set it before
+        if(activeNetworkConfig.priceFeed != address(0)){
+            return activeNetworkConfig;
+        }
 
         // 1. Deploy the mocks
         // 2. return the mock contract address
 
         vm.startBroadcast();
-        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(8, 2000e8);
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
+            DECIMALS, INITIAL_PRICE
+        );
         vm.stopBroadcast();
 
         NetworkConfig memory anvilConfig = NetworkConfig({
