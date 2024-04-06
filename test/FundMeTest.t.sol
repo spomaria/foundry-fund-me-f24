@@ -33,11 +33,11 @@ contract FundMeTest is Test{
     }
 
     function testOwnerIsMsgSender() public view{
-        console.log(fundMe.i_owner());
+        console.log(fundMe.getOwner());
         console.log(msg.sender);
         console.log(address(this));
-        assertEq(fundMe.i_owner(), msg.sender);
-        // assertEq(fundMe.i_owner(), address(this));
+        assertEq(fundMe.getOwner(), msg.sender);
+        // assertEq(fundMe.getOwner(), address(this));
     }
 
     function testPriceFeedVersionIsActive() public view{
@@ -84,5 +84,76 @@ contract FundMeTest is Test{
         vm.prank(USER);
         vm.expectRevert(); // we expect test to fail since USER is not the owner
         fundMe.withdraw();
+    }
+
+    function testWithdrawWithASingleFunder() public funded {
+        // Arrange
+
+        // get the balance of the owner before the withdrawal
+        uint256 ownerStartingBalance = fundMe.getOwner().balance;
+        // balance of the contract before withdrawal
+        uint256 fundMeStartingBalance = address(fundMe).balance;
+
+        // Act
+        // withdraw the funds to owner address
+        vm.prank(fundMe.getOwner());
+        fundMe.withdraw();
+
+        // Assert
+
+        // check if owner balance has increased
+        uint256 ownerEndingBalance = fundMe.getOwner().balance;
+        uint256 fundMeEndingBalance = address(fundMe).balance;
+        console.log(fundMeStartingBalance);
+        console.log(ownerStartingBalance);
+        console.log(fundMeEndingBalance);
+        console.log(ownerEndingBalance);
+        assertEq(fundMeEndingBalance, 0);
+        assertEq(ownerEndingBalance, ownerStartingBalance + fundMeStartingBalance);
+        
+    }
+
+    function testWithdrawFromMultipleFunders() public funded {
+        // Arrange
+
+
+        // We use a for loop to create other fake users
+        // and have them send ETH to the contract
+        // We shall use uint160 so that we can use it to
+        // generate addresses for our fake users instead of a 
+        // name as in makeAddr("Spo")
+        uint160 numberOfFunders = 10;
+        uint160 startingFunderIndex = 1;
+        for(
+            uint160 i = startingFunderIndex; i < numberOfFunders; i++
+        ){
+            // vm.prank and vm.deal are all carried out
+            // in hoax
+            hoax(address(i), SEND_VALUE);
+            fundMe.fund{value: SEND_VALUE}();
+        }
+
+        // get the balance of the owner before the withdrawal
+        uint256 ownerStartingBalance = fundMe.getOwner().balance;
+        // balance of the contract before withdrawal
+        uint256 fundMeStartingBalance = address(fundMe).balance;
+
+        // Act
+        // withdraw the funds to owner address
+        vm.prank(fundMe.getOwner());
+        fundMe.withdraw();
+
+        // Assert
+
+        // check if owner balance has increased
+        uint256 ownerEndingBalance = fundMe.getOwner().balance;
+        uint256 fundMeEndingBalance = address(fundMe).balance;
+        console.log(fundMeStartingBalance);
+        console.log(ownerStartingBalance);
+        console.log(fundMeEndingBalance);
+        console.log(ownerEndingBalance);
+        assertEq(fundMeEndingBalance, 0);
+        assertEq(ownerEndingBalance, ownerStartingBalance + fundMeStartingBalance);
+        
     }
 }

@@ -34,7 +34,7 @@ contract FundMe {
 
     // Since the value of i_owner variable is set once during deployment and does not change,
     // We set it as immutable to optimize gas
-    address public immutable i_owner;
+    address private immutable i_owner;
 
     constructor(address priceFeed){
         i_owner = msg.sender;
@@ -131,5 +131,9 @@ contract FundMe {
 
     function getFunder(uint256 index) public view returns(address){
         return s_funders[index];
+    }
+
+    function getOwner() public view returns(address){
+        return i_owner;
     }
 }
