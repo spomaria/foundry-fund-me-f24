@@ -68,7 +68,45 @@ contract FundMe {
     
     function withdraw() public onlyOwner {
         // Reset all contributions to zero using a for loop
-        for(uint256 indexFunder; indexFunder < s_funders.length;){
+        for(
+            uint256 indexFunder; 
+            indexFunder < s_funders.length; 
+            indexFunder ++
+        ){
+            address funder = s_funders[indexFunder];
+            s_addressToAmountFunded[funder] = 0;
+            
+        }
+
+        // Reset the funders array
+        s_funders = new address[](0);
+
+        // There are three ways to withdraw the funds to the caller of the function
+        // 1. transfer
+        // We make the msg.sender address payable so as to recieve ether
+        // Note that the transfer function reverts automatically when an error is encountered
+        // payable(msg.sender).transfer(address(this).balance);
+
+        // 2. send
+        // Note that the send function does not revert automatically when an error is encountered
+        // So, we use a require keyword to ensure it reverts in the event of any error
+        // bool success = payable(msg.sender).send(address(this).balance);
+        // require(success, "Send Failed");
+
+        // 3. call
+        // Note that the call function returns two variables, a bool and bytes.
+        // However, we are only interested in the bool variable
+        (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call Failed");
+    }
+
+    function cheaperWithdraw() public onlyOwner {
+        // Reset all contributions to zero using a for loop
+
+        // creating this variable implies we are making 1 SLOAD
+        // instead of n SLOAD - gas optimization
+        uint256 fundersLength = s_funders.length;
+        for(uint256 indexFunder; indexFunder < fundersLength;){
             address funder = s_funders[indexFunder];
             s_addressToAmountFunded[funder] = 0;
             // We use unchecked for gas optimization since we know

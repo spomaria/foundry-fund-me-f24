@@ -3,8 +3,8 @@ pragma solidity ^0.8.18;
 
 import { Test, console } from "forge-std/Test.sol";
 //importing our Fundme contract
-import { FundMe } from "../src/FundMe.sol";
-import { DeployFundMe} from "../script/DeployFundMe.s.sol";
+import { FundMe } from "../../src/FundMe.sol";
+import { DeployFundMe} from "../../script/DeployFundMe.s.sol";
 
 contract FundMeTest is Test{
     // defining variable 'fundMe' of type FundMe
@@ -142,6 +142,50 @@ contract FundMeTest is Test{
         // withdraw the funds to owner address
         vm.prank(fundMe.getOwner());
         fundMe.withdraw();
+
+        // Assert
+
+        // check if owner balance has increased
+        uint256 ownerEndingBalance = fundMe.getOwner().balance;
+        uint256 fundMeEndingBalance = address(fundMe).balance;
+        console.log(fundMeStartingBalance);
+        console.log(ownerStartingBalance);
+        console.log(fundMeEndingBalance);
+        console.log(ownerEndingBalance);
+        assertEq(fundMeEndingBalance, 0);
+        assertEq(ownerEndingBalance, ownerStartingBalance + fundMeStartingBalance);
+        
+    }
+
+    function testCheaperWithdrawFromMultipleFunders() public funded {
+        // Arrange
+
+
+        // We use a for loop to create other fake users
+        // and have them send ETH to the contract
+        // We shall use uint160 so that we can use it to
+        // generate addresses for our fake users instead of a 
+        // name as in makeAddr("Spo")
+        uint160 numberOfFunders = 10;
+        uint160 startingFunderIndex = 1;
+        for(
+            uint160 i = startingFunderIndex; i < numberOfFunders; i++
+        ){
+            // makeAddr, vm.deal and vm.prank are all carried out
+            // in hoax
+            hoax(address(i), SEND_VALUE);
+            fundMe.fund{value: SEND_VALUE}();
+        }
+
+        // get the balance of the owner before the withdrawal
+        uint256 ownerStartingBalance = fundMe.getOwner().balance;
+        // balance of the contract before withdrawal
+        uint256 fundMeStartingBalance = address(fundMe).balance;
+
+        // Act
+        // withdraw the funds to owner address using cheaperWithdraw
+        vm.prank(fundMe.getOwner());
+        fundMe.cheaperWithdraw();
 
         // Assert
 
